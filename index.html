@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>韓語看圖填空</title>
+
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<style>
+/* Layout: one lesson per screen — unit header (pattern + note), then a row of 4 picture cards; the 4th is the exercise. */
+:root{
+  --bg:#EEF3F1; --surface:#FFFFFF; --tile:#DDEBE6; --ink:#1B2625; --muted:#5B6B68;
+  --celadon:#2D7C74; --celadon-ink:#FFFFFF; --red:#BF4134; --red-soft:#F7E3E0;
+  --line:#D2DEDA; --ok:#2B8650; --ok-soft:#DFF1E6;
+  --f-display:"Black Han Sans","Noto Sans KR",sans-serif;
+  --f-ko:"Noto Sans KR","Malgun Gothic","Apple SD Gothic Neo",sans-serif;
+  --f-body:"Noto Sans TC","Microsoft JhengHei","PingFang TC","Noto Sans KR",sans-serif;
+  --f-emoji:"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#111817; --surface:#1A2322; --tile:#20302D; --ink:#E4EDEB; --muted:#93A4A0;
+  --celadon:#5BB5AA; --celadon-ink:#0E1615; --red:#E2685B; --red-soft:#3A2220;
+  --line:#2B3A37; --ok:#5CC487; --ok-soft:#1B3326; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111817; --surface:#1A2322; --tile:#20302D; --ink:#E4EDEB; --muted:#93A4A0;
+  --celadon:#5BB5AA; --celadon-ink:#0E1615; --red:#E2685B; --red-soft:#3A2220;
+  --line:#2B3A37; --ok:#5CC487; --ok-soft:#1B3326; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.55;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+.wrap{max-width:1120px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--celadon);outline-offset:2px}
+
+/* top bar */
+.bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px}
+.brand{font-family:var(--f-display);font-size:22px;letter-spacing:.02em;display:flex;align-items:baseline;gap:8px}
+.brand small{font-family:var(--f-body);font-size:13px;color:var(--muted);font-weight:500}
+.nav{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 14px;font-weight:500}
+.btn:hover{border-color:var(--celadon)}
+.btn:disabled{opacity:.4;cursor:default}
+.btn.primary{background:var(--celadon);border-color:var(--celadon);color:var(--celadon-ink)}
+select{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 10px;max-width:220px}
+
+.dots{display:flex;flex-wrap:wrap;gap:6px}
+.dot{width:30px;height:30px;border-radius:8px;border:1px solid var(--line);background:var(--surface);font-size:12px;font-variant-numeric:tabular-nums;color:var(--muted);padding:0}
+.dot.done{background:var(--ok-soft);border-color:var(--ok);color:var(--ok);font-weight:700}
+.dot.cur{background:var(--celadon);border-color:var(--celadon);color:var(--celadon-ink);font-weight:700}
+
+/* unit header */
+.unit{display:grid;grid-template-columns:auto 1fr;gap:6px 22px;align-items:end;border-bottom:2px solid var(--ink);padding-bottom:16px}
+.unit .num{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);grid-column:1/-1;font-weight:700}
+.unit h1{margin:0;font-family:var(--f-display);font-weight:400;font-size:clamp(40px,7vw,64px);line-height:1;color:var(--celadon)}
+.unit .mean{font-size:20px;font-weight:700}
+.unit .note{grid-column:1/-1;color:var(--muted);max-width:68ch;margin:6px 0 0;text-wrap:pretty}
+.unit .note b{color:var(--ink)}
+
+.opts{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:13px;color:var(--muted)}
+.chip{border:1px solid var(--line);background:transparent;border-radius:999px;padding:4px 12px;font-size:13px}
+.chip[aria-pressed="true"]{background:var(--tile);border-color:var(--celadon);color:var(--ink)}
+.warn{font-size:13px;color:var(--red);background:var(--red-soft);border-radius:10px;padding:8px 12px}
+
+/* cards */
+.cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+@media (max-width:920px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:460px){.cards{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden;display:flex;flex-direction:column;min-width:0}
+.card .tag{font-size:12px;font-weight:700;letter-spacing:.1em;color:var(--muted);padding:10px 14px 0}
+.pic{margin:10px 14px 0;aspect-ratio:4/3;max-width:100%;background:var(--tile);border-radius:12px;position:relative;display:grid;place-items:center}
+.pic .obj{font-family:var(--f-emoji);font-size:clamp(64px,8vw,84px);line-height:1}
+.pic .mod{position:absolute;right:10px;bottom:10px;width:46px;height:46px;border-radius:50%;background:var(--surface);display:grid;place-items:center;font-family:var(--f-emoji);font-size:24px;box-shadow:0 1px 0 var(--line)}
+.body{padding:12px 14px 16px;display:flex;flex-direction:column;gap:4px;flex:1}
+.ko-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.ko{font-family:var(--f-ko);font-size:22px;font-weight:700;line-height:1.35;min-width:0;overflow-wrap:anywhere}
+.say{flex:none;width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center}
+.say:hover{border-color:var(--celadon);color:var(--celadon)}
+.say svg{width:20px;height:20px}
+.say.on{background:var(--celadon);color:var(--celadon-ink);border-color:var(--celadon)}
+.rom{font-size:13px;color:var(--muted);font-style:italic}
+.zh{font-size:14px}
+
+/* exercise card */
+.card.quiz{border:2px dashed var(--red)}
+.card.quiz .tag{color:var(--red)}
+.card.quiz.correct{border-style:solid;border-color:var(--ok)}
+.blank-line{display:flex;align-items:center;flex-wrap:wrap;gap:4px;font-family:var(--f-ko);font-size:22px;font-weight:700}
+.blank-line input{font:inherit;font-weight:700;color:var(--red);width:7.5em;max-width:100%;border:none;border-bottom:3px solid var(--red);background:transparent;padding:0 2px;border-radius:0}
+.blank-line input::placeholder{color:var(--muted);opacity:.5;font-weight:400}
+.correct .blank-line input{color:var(--ok);border-color:var(--ok)}
+.bank{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.word{font-family:var(--f-ko);font-size:15px;border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:4px 10px}
+.word:hover{border-color:var(--red)}
+.actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.actions .btn{padding:6px 12px;font-size:14px}
+.fb{font-size:14px;font-weight:500;min-height:1.5em}
+.fb.ok{color:var(--ok)} .fb.no{color:var(--red)}
+
+.foot{font-size:13px;color:var(--muted);display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;border-top:1px solid var(--line);padding-top:14px}
+kbd{font-family:inherit;border:1px solid var(--line);border-radius:4px;padding:0 5px;background:var(--surface)}
+
+@media (prefers-reduced-motion:no-preference){
+  .card{transition:transform .15s ease}
+  .correct{animation:pop .4s ease}
+  @keyframes pop{50%{transform:scale(1.03)}}
+}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <div class="bar">
+    <div class="brand">한국어 그림 카드 <small>韓語看圖填空 · 初級 20 課</small></div>
+    <div class="nav">
+      <button class="btn" id="prev" type="button">← 上一單元</button>
+      <select id="pick" aria-label="選擇單元"></select>
+      <button class="btn primary" id="next" type="button">下一單元 →</button>
+    </div>
+  </div>
+
+  <div class="dots" id="dots" aria-label="單元進度"></div>
+
+  <header class="unit" id="unit"></header>
+
+  <div class="opts">
+    <span>顯示：</span>
+    <button class="chip" id="optRom" type="button" aria-pressed="true">羅馬拼音</button>
+    <button class="chip" id="optZh" type="button" aria-pressed="true">中文意思</button>
+    <button class="chip" id="optSlow" type="button" aria-pressed="false">慢速發音</button>
+  </div>
+  <div class="warn" id="warn" hidden></div>
+
+  <section class="cards" id="cards"></section>
+
+  <div class="foot">
+    <span>前 3 張是例句，看懂規則後在第 4 張填空。可以用鍵盤打韓文，或點下方字卡。</span>
+    <span><kbd>Enter</kbd> 檢查答案　<kbd>←</kbd><kbd>→</kbd> 換單元</span>
+  </div>
+</div>
+
+<script>
+// 每課：ans = 要填的句尾；items = [圖, 名詞部分, 拼音, 中文]；第 4 項是填空題
+const UNITS = [
+ {ans:"좋아요",mean:"很好、品質好",mod:"👍",note:"<b>名詞 + 이/가 좋아요</b>：「…很好」。名詞最後一個字有收尾音（받침）就接 <b>이</b>，沒有就接 <b>가</b>。",
+  items:[["🪑","의자가","uijaga joayo","椅子很好"],["📺","텔레비전이","tellebijeoni joayo","電視很好"],["🛏️","침대가","chimdaega joayo","床很好"],["🛋️","소파가","sopaga joayo","沙發很好"]]},
+ {ans:"커요",mean:"很大",mod:"🔺",note:"<b>크다 → 커요</b>：「…很大」。助詞 이/가 的規則和第 1 課一樣。",
+  items:[["🐘","코끼리가","kokkiriga keoyo","大象很大"],["🏠","집이","jibi keoyo","房子很大"],["🚌","버스가","beoseuga keoyo","公車很大"],["🐳","고래가","goraega keoyo","鯨魚很大"]]},
+ {ans:"작아요",mean:"很小",mod:"🔻",note:"<b>작다 → 작아요</b>：「…很小」。和 커요 是一對反義詞。",
+  items:[["🐜","개미가","gaemiga jagayo","螞蟻很小"],["🐭","쥐가","jwiga jagayo","老鼠很小"],["🍒","체리가","cheriga jagayo","櫻桃很小"],["🐝","벌이","beori jagayo","蜜蜂很小"]]},
+ {ans:"맛있어요",mean:"好吃",mod:"😋",note:"<b>맛(味道) + 있어요(有)</b> = 有味道 = 好吃。唸作 <b>마시써요</b>。反義是 맛없어요（難吃）。",
+  items:[["🍕","피자가","pijaga masisseoyo","披薩很好吃"],["🍜","라면이","ramyeoni masisseoyo","泡麵很好吃"],["🍎","사과가","sagwaga masisseoyo","蘋果很好吃"],["🍰","케이크가","keikeuga masisseoyo","蛋糕很好吃"]]},
+ {ans:"뜨거워요",mean:"很燙",mod:"🔥",note:"<b>뜨겁다 → 뜨거워요</b>：ㅂ 不規則變化，語幹的 ㅂ 變成 <b>워</b>。",
+  items:[["☕","커피가","keopiga tteugeowoyo","咖啡很燙"],["🍵","차가","chaga tteugeowoyo","茶很燙"],["🥣","국이","gugi tteugeowoyo","湯很燙"],["🍲","찌개가","jjigaega tteugeowoyo","燉鍋很燙"]]},
+ {ans:"차가워요",mean:"很冰",mod:"❄️",note:"<b>차갑다 → 차가워요</b>：和 뜨거워요 一樣是 ㅂ 不規則。兩個是反義詞。",
+  items:[["🧊","얼음이","eoreumi chagawoyo","冰塊很冰"],["🍦","아이스크림이","aiseukeurimi chagawoyo","冰淇淋很冰"],["🥛","우유가","uyuga chagawoyo","牛奶很冰"],["🍉","수박이","subagi chagawoyo","西瓜很冰"]]},
+ {ans:"예뻐요",mean:"很漂亮",mod:"✨",note:"<b>예쁘다 → 예뻐요</b>：語幹的 ㅡ 脫落，變成 ㅓ。",
+  items:[["🌸","꽃이","kkochi yeppeoyo","花很漂亮"],["🦋","나비가","nabiga yeppeoyo","蝴蝶很漂亮"],["👗","옷이","osi yeppeoyo","衣服很漂亮"],["🌈","무지개가","mujigaega yeppeoyo","彩虹很漂亮"]]},
+ {ans:"비싸요",mean:"很貴",mod:"💰",note:"<b>비싸다 → 비싸요</b>：「…很貴」。購物時很常用。",
+  items:[["💍","반지가","banjiga bissayo","戒指很貴"],["🚗","자동차가","jadongchaga bissayo","汽車很貴"],["⌚","시계가","sigyega bissayo","手錶很貴"],["💻","컴퓨터가","keompyuteoga bissayo","電腦很貴"]]},
+ {ans:"싸요",mean:"很便宜",mod:"🏷️",note:"<b>싸다 → 싸요</b>：「…很便宜」。比 비싸요 少了一個 비，意思剛好相反。",
+  items:[["🍌","바나나가","bananaga ssayo","香蕉很便宜"],["✏️","연필이","yeonpiri ssayo","鉛筆很便宜"],["🥚","계란이","gyerani ssayo","雞蛋很便宜"],["🍞","빵이","ppangi ssayo","麵包很便宜"]]},
+ {ans:"있어요",mean:"有",mod:"✅",note:"<b>名詞 + 이/가 있어요</b>：「有…」或「…在」。唸作 <b>이써요</b>。",
+  items:[["📚","책이","chaegi isseoyo","有書"],["🐱","고양이가","goyangiga isseoyo","有貓"],["🔑","열쇠가","yeolsoega isseoyo","有鑰匙"],["☂️","우산이","usani isseoyo","有雨傘"]]},
+ {ans:"없어요",mean:"沒有",mod:"❌",note:"<b>名詞 + 이/가 없어요</b>：「沒有…」。是 있어요 的反義，唸作 <b>업써요</b>。",
+  items:[["💵","돈이","doni eopseoyo","沒有錢"],["📱","휴대폰이","hyudaeponi eopseoyo","沒有手機"],["⏰","시간이","sigani eopseoyo","沒有時間"],["🧻","휴지가","hyujiga eopseoyo","沒有衛生紙"]]},
+ {ans:"좋아해요",mean:"喜歡",mod:"❤️",note:"<b>名詞 + 을/를 좋아해요</b>：「（我）喜歡…」。這裡用受詞助詞：有收尾音接 <b>을</b>，沒有接 <b>를</b>。注意和第 1 課的 좋아요 不一樣。",
+  items:[["🐶","강아지를","gangajireul joahaeyo","喜歡小狗"],["⚽","축구를","chukgureul joahaeyo","喜歡足球"],["🎵","음악을","eumageul joahaeyo","喜歡音樂"],["🍓","딸기를","ttalgireul joahaeyo","喜歡草莓"]]},
+ {ans:"먹어요",mean:"吃",mod:"🍴",note:"<b>名詞 + 을/를 먹어요</b>：「吃…」。먹다 → 먹어요。",
+  items:[["🍚","밥을","babeul meogeoyo","吃飯"],["🍞","빵을","ppangeul meogeoyo","吃麵包"],["🍗","치킨을","chikineul meogeoyo","吃炸雞"],["🍜","라면을","ramyeoneul meogeoyo","吃泡麵"]]},
+ {ans:"마셔요",mean:"喝",mod:"👄",note:"<b>名詞 + 을/를 마셔요</b>：「喝…」。마시다 → 마셔요（ㅣ + ㅓ 合成 ㅕ）。",
+  items:[["💧","물을","mureul masyeoyo","喝水"],["☕","커피를","keopireul masyeoyo","喝咖啡"],["🥛","우유를","uyureul masyeoyo","喝牛奶"],["🧃","주스를","juseureul masyeoyo","喝果汁"]]},
+ {ans:"가요",mean:"去",mod:"🚶",note:"<b>地點 + 에 가요</b>：「去…」。에 表示方向，不管有沒有收尾音都用 <b>에</b>。",
+  items:[["🏫","학교에","hakgyoe gayo","去學校"],["🏥","병원에","byeongwone gayo","去醫院"],["🏪","편의점에","pyeonijeome gayo","去便利商店"],["🏦","은행에","eunhaenge gayo","去銀行"]]},
+ {ans:"예요",join:"",mean:"是…",mod:"☝️",choices:["예요","이에요","에요","있어요"],note:"<b>名詞 + 예요 / 이에요</b>：「是…」。名詞沒有收尾音接 <b>예요</b>，有收尾音接 <b>이에요</b>。看看 모자 的最後一個字有沒有收尾音？",
+  items:[["🍎","사과","sagwayeyo","是蘋果"],["📖","책","chaegieyo","是書"],["🌙","달","darieyo","是月亮"],["🧢","모자","mojayeyo","是帽子"]],
+  sent:["사과예요","책이에요","달이에요"]},
+ {ans:"많아요",mean:"很多",mod:"📈",note:"<b>많다 → 많아요</b>：「…很多」。ㅎ 不發音，唸作 <b>마나요</b>。",
+  items:[["⭐","별이","byeori manayo","星星很多"],["👥","사람이","sarami manayo","人很多"],["🚗","자동차가","jadongchaga manayo","車很多"],["🌳","나무가","namuga manayo","樹很多"]]},
+ {ans:"재미있어요",mean:"有趣",mod:"😆",note:"<b>재미(趣味) + 있어요</b> = 有趣。和 맛있어요 是同樣的組合方式。反義是 재미없어요。",
+  items:[["🎬","영화가","yeonghwaga jaemiisseoyo","電影很有趣"],["🎮","게임이","geimi jaemiisseoyo","遊戲很有趣"],["📺","드라마가","deuramaga jaemiisseoyo","韓劇很有趣"],["🎢","놀이공원이","norigongwoni jaemiisseoyo","遊樂園很有趣"]]},
+ {ans:"사요",mean:"買",mod:"🛒",note:"<b>名詞 + 을/를 사요</b>：「買…」。사다 → 사요。小心別和 싸요（便宜）搞混。",
+  items:[["👟","신발을","sinbareul sayo","買鞋子"],["🧢","모자를","mojareul sayo","買帽子"],["👜","가방을","gabangeul sayo","買包包"],["🎁","선물을","seonmureul sayo","買禮物"]]},
+ {ans:"아파요",mean:"痛",mod:"😣",note:"<b>身體部位 + 이/가 아파요</b>：「…痛」。아프다 → 아파요（ㅡ 脫落）。",
+  items:[["🤕","머리가","meoriga apayo","頭痛"],["🦵","다리가","dariga apayo","腿痛"],["🦷","이가","iga apayo","牙齒痛"],["✋","손이","soni apayo","手痛"]]}
+];
+
+const $ = s => document.querySelector(s);
+const store = {get(k,d){try{const v=localStorage.getItem(k);return v===null?d:JSON.parse(v)}catch(e){return d}},
+               set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+let done = new Set(store.get("kc-done",[]));
+let opt = Object.assign({rom:true,zh:true,slow:false}, store.get("kc-opt",{}));
+let cur = 0;
+const h = location.hash.match(/^#u(\d+)$/);
+if(h && +h[1]>=1 && +h[1]<=UNITS.length) cur = +h[1]-1; else cur = store.get("kc-cur",0);
+if(!(cur>=0 && cur<UNITS.length)) cur=0;
+
+const sentence = (u,i) => u.sent && u.sent[i] ? u.sent[i] : u.items[i][1] + (u.join ?? " ") + u.ans;
+const esc = s => s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const norm = s => (s||"").normalize("NFC").replace(/[\s.。!?！？~]/g,"");
+
+// 穩定的亂數，讓每課字卡順序固定
+function seeded(n){let x=(n+1)*9301+49297;return()=>{x=(x*9301+49297)%233280;return x/233280}}
+function choicesFor(i){
+  const u=UNITS[i]; if(u.choices) return shuffle(u.choices.slice(),seeded(i));
+  const r=seeded(i), pool=UNITS.filter((v,k)=>k!==i&&!v.choices).map(v=>v.ans);
+  const picks=new Set([u.ans]); while(picks.size<4) picks.add(pool[Math.floor(r()*pool.length)]);
+  return shuffle([...picks],r);
+}
+function shuffle(a,r){for(let k=a.length-1;k>0;k--){const j=Math.floor(r()*(k+1));[a[k],a[j]]=[a[j],a[k]]}return a}
+
+// 語音
+let koVoice=null;
+function loadVoices(){ if(!("speechSynthesis" in window)) return;
+  const vs=speechSynthesis.getVoices(); koVoice=vs.find(v=>/^ko/i.test(v.lang))||null; }
+if("speechSynthesis" in window){ loadVoices(); speechSynthesis.onvoiceschanged=loadVoices; }
+function speak(text,btn){
+  if(!("speechSynthesis" in window)){showWarn("這個瀏覽器不支援語音播放，建議改用 Chrome 或 Edge。");return}
+  loadVoices();
+  if(!koVoice && speechSynthesis.getVoices().length) showWarn("找不到韓文語音，發音可能不正確。Windows 可到「設定 → 時間與語言 → 語音」加裝韓文語音，或改用 Chrome / Edge。");
+  speechSynthesis.cancel();
+  const ut=new SpeechSynthesisUtterance(text); ut.lang="ko-KR"; ut.rate=opt.slow?0.6:0.9; if(koVoice) ut.voice=koVoice;
+  document.querySelectorAll(".say.on").forEach(b=>b.classList.remove("on"));
+  if(btn){btn.classList.add("on"); ut.onend=ut.onerror=()=>btn.classList.remove("on");}
+  speechSynthesis.speak(ut);
+}
+function showWarn(m){const w=$("#warn");w.textContent=m;w.hidden=false}
+
+const ICON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>';
+
+function render(){
+  const u=UNITS[cur], n=cur+1;
+  $("#unit").innerHTML=`<div class="num">第 ${n} 課 / 共 ${UNITS.length} 課</div>
+    <h1 lang="ko">${u.ans}</h1><div class="mean">${u.mean}</div><p class="note">${u.note}</p>`;
+  let html="";
+  for(let i=0;i<3;i++){
+    const it=u.items[i], s=sentence(u,i);
+    html+=`<article class="card">
+      <div class="tag">例句 ${i+1}</div>
+      <div class="pic" role="img" aria-label="${it[3]}"><span class="obj">${it[0]}</span><span class="mod">${u.mod}</span></div>
+      <div class="body">
+        <div class="ko-row"><div class="ko" lang="ko">${s}</div>
+          <button class="say" type="button" data-say="${esc(s)}" aria-label="播放發音：${esc(s)}">${ICON}</button></div>
+        <div class="rom" ${opt.rom?"":"hidden"}>${it[2]}</div>
+        <div class="zh" ${opt.zh?"":"hidden"}>${it[3]}</div>
+      </div></article>`;
+  }
+  const q=u.items[3], full=q[1]+(u.join??" ")+u.ans, isDone=done.has(cur);
+  html+=`<article class="card quiz${isDone?" correct":""}" id="quiz">
+    <div class="tag">換你填空</div>
+    <div class="pic" role="img" aria-label="${q[3]}"><span class="obj">${q[0]}</span><span class="mod">${u.mod}</span></div>
+    <div class="body">
+      <div class="ko-row"><label class="blank-line" lang="ko" for="ansInput"><span>${q[1]}</span>
+        <input id="ansInput" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="？" value="${isDone?u.ans:""}"></label>
+        <button class="say" type="button" id="qSay" data-say="${esc(full)}" aria-label="播放完整句子" ${isDone?"":"hidden"}>${ICON}</button></div>
+      <div class="rom" id="qRom" ${opt.rom&&isDone?"":"hidden"}>${q[2]}</div>
+      <div class="zh" ${opt.zh?"":"hidden"}>${q[3]}</div>
+      <div class="bank" aria-label="字卡">${choicesFor(cur).map(w=>`<button class="word" type="button" lang="ko" data-w="${w}">${w}</button>`).join("")}</div>
+      <div class="actions">
+        <button class="btn primary" type="button" id="check">檢查</button>
+        <button class="btn" type="button" id="hint">提示</button>
+        <button class="btn" type="button" id="show">看答案</button>
+      </div>
+      <div class="fb ${isDone?"ok":""}" id="fb" aria-live="polite">${isDone?"答對了！這課已完成。":""}</div>
+    </div></article>`;
+  $("#cards").innerHTML=html;
+
+  $("#pick").value=cur; $("#prev").disabled=cur===0; $("#next").disabled=cur===UNITS.length-1;
+  renderDots(); store.set("kc-cur",cur);
+  try{history.replaceState(null,"","#u"+n)}catch(e){}
+
+  const inp=$("#ansInput"), fb=$("#fb");
+  const check=()=>{
+    if(norm(inp.value)===norm(u.ans)){
+      inp.value=u.ans; fb.className="fb ok"; fb.textContent="答對了！"+full+"（"+q[3]+"）";
+      $("#quiz").classList.add("correct"); $("#qSay").hidden=false; $("#qRom").hidden=!opt.rom;
+      done.add(cur); store.set("kc-done",[...done]); renderDots(); speak(full,$("#qSay"));
+    } else if(!inp.value.trim()){ fb.className="fb no"; fb.textContent="先輸入答案，或點上面的字卡。"; }
+    else { fb.className="fb no"; fb.textContent="再想想看，對照前面 3 個例句的句尾。"; }
+  };
+  inp.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();check()}});
+  $("#check").onclick=check;
+  $("#hint").onclick=()=>{fb.className="fb";fb.innerHTML=`第一個字是「<span lang="ko">${[...u.ans][0]}</span>」，共 ${[...u.ans].length} 個字。`};
+  $("#show").onclick=()=>{inp.value=u.ans;fb.className="fb";fb.textContent="答案是 "+u.ans+"，按「檢查」完成這課。";inp.focus()};
+  document.querySelectorAll(".word").forEach(b=>b.onclick=()=>{inp.value=b.dataset.w;inp.focus();check()});
+}
+function renderDots(){
+  $("#dots").innerHTML=UNITS.map((u,i)=>`<button class="dot${i===cur?" cur":done.has(i)?" done":""}" type="button" data-i="${i}" aria-label="第 ${i+1} 課 ${u.ans}${done.has(i)?"（已完成）":""}" title="第 ${i+1} 課 · ${u.ans} ${u.mean}">${i+1}</button>`).join("");
+}
+function go(i){ if(i<0||i>=UNITS.length) return; cur=i; if("speechSynthesis" in window) speechSynthesis.cancel(); render(); window.scrollTo({top:0}); }
+
+$("#pick").innerHTML=UNITS.map((u,i)=>`<option value="${i}">第 ${i+1} 課 · ${u.ans} ${u.mean}</option>`).join("");
+$("#pick").onchange=e=>go(+e.target.value);
+$("#prev").onclick=()=>go(cur-1); $("#next").onclick=()=>go(cur+1);
+$("#dots").addEventListener("click",e=>{const b=e.target.closest(".dot"); if(b) go(+b.dataset.i)});
+$("#cards").addEventListener("click",e=>{const b=e.target.closest(".say"); if(b) speak(b.dataset.say,b)});
+document.addEventListener("keydown",e=>{
+  if(e.target.matches("input,select,textarea")) return;
+  if(e.key==="ArrowLeft") go(cur-1); if(e.key==="ArrowRight") go(cur+1);
+});
+function setOpt(id,key){const b=$(id);b.setAttribute("aria-pressed",opt[key]);
+  b.onclick=()=>{opt[key]=!opt[key];b.setAttribute("aria-pressed",opt[key]);store.set("kc-opt",opt);render()}}
+setOpt("#optRom","rom"); setOpt("#optZh","zh"); setOpt("#optSlow","slow");
+render();
+</script>
+
+</body>
+</html>
